@@ -1,6 +1,5 @@
-/* g++ -o am2320 am2320.c
- * 
- * Reads an AM2320 or AM2321 usIng I2C bus on the raspberry PI
+/*  
+ * Reads an AM2320 or AM2321 sensor using I2C bus on the raspberry PI
  * I2C has to be enabled with sudo raspi-config to work.
  * 
  * Connections 
@@ -31,72 +30,38 @@
  *    D A L   D
  * 
 */
-#include <stdio.h>
+
 #include <sys/ioctl.h>
 #include <fcntl.h> 
 #include <linux/i2c-dev.h>
-#include <unistd.h>
-#include <stdint.h>
 
-#define I2C_DEVICE "/dev/i2c-1"
-#define AM2321_ADDR 0x5C
+#include "am2320.h"
 
-
-class  temp_humid_sensor {
-
-	private:
-	
-		bool data_valid;
-		
-		float temperature;
-		float humidity;
-			
-		int sensor_status;
-		int fd;
-		
-		uint8_t data[8];
-
-		uint16_t calc_crc16(const uint8_t *buf, size_t len);
-		uint16_t combine_bytes(uint8_t msb, uint8_t lsb);
-	
-		void validate_sensor_data();
-
-	public:
-	
-		temp_humid_sensor(int gpio_pin);
-
-		void reset();
-		void read_data();
-		bool valid();
-
-		float get_temperature_in_c();
-		float get_temperature_in_f();
-		float get_humidity();
-		int   get_error();
-		
-	protected:
-
-};
-
-temp_humid_sensor::temp_humid_sensor(int gpio_pin) {
-	
-	
+Am2320::Am2320(){
+	this->reset();
 }
 
-void temp_humid_sensor::reset() {
+void Am2320::reset() {
+	
+	// Clear existing data
+	this->data[0] = this->data[1] = this->data[2] 
+		= this->data[3] = this->data[4] = this->data[5] 
+		= this->data[6] = this->data[7] = 0;
+		
+	this->temperature = 0.0;
+	this->humidity = 0.0;
+	this->data_valid = false;
 	
 	this->sensor_status = 0;
 	
+	this->i2c_bus_data = open(I2C_DEVICE, O_RDWR);
 	
-	
-	this->fd = open(I2C_DEVICE, O_RDWR);
-	
-	if (this->fd < 0) {
+	if (this->i2c_bus_data < 0) {
 		this->sensor_status = 1;
 		return;
 	}
 	
-	if (ioctl(this->fd, I2C_SLAVE, AM2321_ADDR) < 0) {
+	if (ioctl(this->i2c_bus_data, I2C_SLAVE, AM2321_ADDR) < 0) {
 		this->sensor_status = 2;
 		return;
 	}
@@ -104,7 +69,7 @@ void temp_humid_sensor::reset() {
 	/* wake AM2320 up, goes to sleep to not warm up and
 	* affect the humidity sensor 
 	*/
-	write(this->fd, NULL, 0);
+	write(this->i2c_bus_data, NULL, 0);
 	usleep(1000); /* at least 0.8ms, at most 3ms */
 	
 	/* write at addr 0x03, start reg = 0x00, num regs = 0x04 */
@@ -113,14 +78,14 @@ void temp_humid_sensor::reset() {
 	this->data[1] = 0x00; 
 	this->data[2] = 0x04;
 	
-	if (write(this->fd, this->data, 3) < 0) {
+	if (write(this->i2c_bus_data, this->data, 3) < 0) {
 		this->sensor_status = 3;
 		return;
 	}
 
 }
 
-uint16_t temp_humid_sensor::calc_crc16(const uint8_t *buf, size_t len) {
+uint16_t Am2320::calc_crc16(const uint8_t *buf, size_t len) {
 
   uint16_t crc = 0xFFFF;
   
@@ -139,13 +104,13 @@ uint16_t temp_humid_sensor::calc_crc16(const uint8_t *buf, size_t len) {
   return crc;
 }
 
-uint16_t temp_humid_sensor::combine_bytes(uint8_t msb, uint8_t lsb)
+uint16_t Am2320::combine_bytes(uint8_t msb, uint8_t lsb)
 {
   return ((uint16_t)msb << 8) | (uint16_t)lsb;
 }
 
 
-void temp_humid_sensor::validate_sensor_data(){
+void Am2320::validate_sensor_data(){
 	
 	this->data_valid = false;
 
@@ -167,13 +132,7 @@ void temp_humid_sensor::validate_sensor_data(){
 	this->data_valid = true;
 }
 
-bool temp_humid_sensor::valid(){
-	return this->data_valid;
-}
-
-void temp_humid_sensor::read_data(){
-	
-	this->data_valid = false;
+void Am2320::read_data(){
 	
 	this->reset();
 
@@ -194,17 +153,13 @@ void temp_humid_sensor::read_data(){
 	* Byte 7: CRC msb byte
 	*/
 
-	if (read(this->fd, this->data, 8) < 0) {
+	if (read(this->i2c_bus_data, this->data, 8) < 0) {
 		this->sensor_status = 4;
-		close(this->fd);
+		close(this->i2c_bus_data);
 		return;
 	}
 	
-	close(fd);
-
-  //printf("[0x%02x 0x%02x  0x%02x 0x%02x  0x%02x 0x%02x  0x%02x 0x%02x]\n", data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7] );
-
-
+	close(i2c_bus_data);
 
   uint16_t temp16 = this->combine_bytes(data[4], data[5]); 
   uint16_t humi16 = this->combine_bytes(data[2], data[3]);   
@@ -221,59 +176,4 @@ void temp_humid_sensor::read_data(){
 
 }
 
-int temp_humid_sensor::get_error(){
-	return this->sensor_status;
-}
 
-
-float temp_humid_sensor::get_humidity(){
-	return this->humidity;
-}
-
-float temp_humid_sensor::get_temperature_in_c(){
-	return this->temperature;
-}
-
-float temp_humid_sensor::get_temperature_in_f(){
-	return this->temperature;
-}
-
-class  temp_humid_data {
-
-        private:
-                float temperature_readings[10];
-                float humidity_readings[10];
-
-        public:
-                temp_humid_data();
-                float average_temperature();
-                float average_humidity();
-                float recent_temperature();
-                float recent_humidity();
-                float last_temperature();
-		float last_humidity();
-
-        protected:
-
-};
-
-int main( void )
-{
-
-
-	temp_humid_sensor sensor( 0 );
-
-	for ( int read_counter = 0; read_counter < 10; read_counter++ )
-	{
-
-		sensor.read_data();
-		if(sensor.valid())
-            printf( "Humidity = %f%% Temperature = %f C \n", sensor.get_humidity(), sensor.get_temperature_in_c());
-        else
-			printf( "Error %d \n", sensor.get_error());
-
-		usleep(1000000); 
-	}
-
-	return(0);
-}
