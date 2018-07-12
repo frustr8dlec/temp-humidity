@@ -1,6 +1,6 @@
 /* g++ -o am2320 am2320.c
  * 
- * Reads an AM2320 or AM2321 uisng I2C bus on the raspberry PI
+ * Reads an AM2320 or AM2321 usIng I2C bus on the raspberry PI
  * I2C has to be enabled with sudo raspi-config to work.
  * 
  * Connections 
@@ -18,16 +18,17 @@
  *   D D N C
  *   D A D L
  * 
- *  Raspbery PI
+ *   R B B W
+ *   E R L H
+ *   D N K T
  * 
- *        G
- *        N
- *        D
- *  2 o o x o o o o o o o o o o o o o o o o o 40
- *  1 x x x o o o o o o o o o o o o o o o o o 39
- *    V S S
- *    D D C
- *    D A L
+ *  Raspbery PI
+ *        
+ *  2 o o o o o o o o o o o o o o o o o o o o 40
+ *  1 x x x o x o o o o o o o o o o o o o o o 39
+ *    V S S   G
+ *    D D C   N
+ *    D A L   D
  * 
 */
 #include <stdio.h>
