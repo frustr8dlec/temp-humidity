@@ -5,7 +5,7 @@
 using namespace System;
 #include <iostream>
 #include <iomanip>
-
+#include <stdlib.h>
 #include "http.h"
 
 
@@ -27,10 +27,11 @@ int main(array<System::String ^> ^args)
 			<< "C Temp = " << sensor.get_temperature_in_f()
 			<< "F" << std::endl;
 
-		system("pause");
+		_sleep(1000);
 		
 	}
 
+	system("pause");
 	return(0);
 }
 
