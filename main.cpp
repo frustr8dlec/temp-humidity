@@ -1,3 +1,12 @@
+/* Compile instructions
+ * 
+ * For AM2320 sensor: g++ am2320.cpp main.cpp -o AM2320 -lwiringPi -lwiringPiDev
+ * For DHT11 sensor:  g++ dht.cpp main.cpp -o DHT11 -lwiringPi -lwiringPiDev
+ * 
+ */ 
+
+
+
 #include <wiringPi.h>
 #include <iostream>
 #include <iomanip>
@@ -10,7 +19,7 @@ int main( void )
     wiringPiSetup();
 
 	Am2320 sensor;
-//	Dht11 sensor;
+//	Dht11 sensor;  
 	
 	for ( int read_counter = 0; read_counter < 5; read_counter++ )
 	{
