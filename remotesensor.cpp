@@ -1,18 +1,28 @@
-// remotesensor.cpp : main project file.
+/* remotesensor.cpp : main project file.
+   
+   requires the following files to be included in a
+   windows clr console application to work.
 
-#include "stdafx.h"
+   sensor.h			Abstract class
+   http.h			Http sensor class definition
+   http.cpp			Http sensor class
+   remotesensor.cpp	Main program
 
-using namespace System;
+   http class contains contains .Net specific code to function 
+   and therefore cannot be compiled in a linux environment.
+   
+*/
+#include "stdafx.h" // Microsoft Specific
+
+using namespace System;  // Microsoft Specific
 #include <iostream>
 #include <iomanip>
 #include <stdlib.h>
 #include "http.h"
 
 
-int main(array<System::String ^> ^args)
+int main()
 {
-
-
 	Http sensor ;
 
 	for (int read_counter = 0; read_counter < 5; read_counter++)
@@ -31,7 +41,8 @@ int main(array<System::String ^> ^args)
 		
 	}
 
-	system("pause");
+	system("pause");  // Microsoft Specific Code
+
 	return(0);
 }
 
