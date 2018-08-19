@@ -3,5 +3,6 @@ AM2320
 dht
 dht2file
 am2320
+testclimate
 *.cgi
 
