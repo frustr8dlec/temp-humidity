@@ -25,7 +25,7 @@
 #include <fstream>
 #include <iomanip>
 #include <unistd.h>
-
+#include <cstdio>
 // Catch CTRL + C etc.
 #include <signal.h>
 
@@ -44,18 +44,17 @@ ofstream json_file;
 void my_handler(int s){
 	
 	printf("Caught signal %d\n",s);
-	
-	if(!json_file.is_open()) json_file.open("/var/www/html/data.json", ios::out | ios::trunc);
-	
 
-	json_file << "Content-Type: application/json\r\n\r\n";
-	json_file << "{ \"Error\" : \"" << "Offline" << "\" "
+	if(json_file.is_open()) json_file.close(); 
+	if( remove( "/var/www/html/data.json" ) != 0 ) {   
+		json_file.open("/var/www/html/data.json", ios::out | ios::trunc);
+		json_file << "{ \"Error\" : \"" << "File deletion error system offline" << "\" "
 			  << "}";
-	json_file << "\n"; 
-	
-	json_file.close(); 
-	         
-    exit(1); 
+		json_file << "\n"; 
+		json_file.close();     
+	}
+
+	exit(1); 
 
 }
 
@@ -89,7 +88,7 @@ int main( void )
 		json_file.open("/var/www/html/data.json", ios::out | ios::trunc);
 		if(sensor.valid()) {
 			
-			json_file << "Content-Type: application/json\r\n\r\n";
+			//json_file << "Content-Type: application/json\r\n\r\n";
 			json_file << setprecision(2) << fixed 
 				 << "{ \"Humidity\" : \"" << sensor.get_humidity() << "\", "
 				 << "\"Centigrade\" : \"" << sensor.get_temperature_in_c() << "\", " 
@@ -98,7 +97,7 @@ int main( void )
 			json_file << "\n";
 		}
 		else {
-			json_file << "Content-Type: application/json\r\n\r\n";
+			//json_file << "Content-Type: application/json\r\n\r\n";
 			json_file << setprecision(2) << fixed 
 				 << "{ \"Error\" : \"" << sensor.get_error() << "\" "
 				 << "}";

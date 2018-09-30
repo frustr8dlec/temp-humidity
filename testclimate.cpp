@@ -11,11 +11,26 @@
    http class contains contains .Net specific code to function 
    and therefore cannot be compiled in a linux environment.
    
+   For raspberry Pi local functionality
+   
+   use
+   
+   am2320.h			AM2320 sensor class definition
+   am2320.cpp		AM2320 sensor class
+   
+   Set 
+   
+   #define windows 0
+    
+   Compile with:
+
+   g++ -std=c++11 am2320.cpp climate.hpp testclimate.cpp -o testclimate
+   
 */
 
-#include "stdafx.h" 
+#include "stdafx.h" // Global includes options file
 
-#define windows 0
+#define windows 0   // Set to 1 to compile for windows 0 for Rasp. Pi
 
 #if windows != 1
 #include <unistd.h>
